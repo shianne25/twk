@@ -1,6 +1,15 @@
 from pynput import keyboard
 import threading
 from backend.matcher import match
+from PyQt6.QtCore import pyqtSignal, QObject
+from PyQt6.QtWidgets import QApplication
+from frontend.overlay import SuggestionOverlay, SystemTray
+import sys
+
+# The bridge — safely connects listener thread to the UI thread
+class Bridge(QObject):
+    suggestion_ready = pyqtSignal(str, str)  # emits (slang, definition)
+    hide_overlay = pyqtSignal()              # emits when suggestion should disappear
 
 # The buffer stores the last N characters the user typed
 buffer = ""
@@ -10,9 +19,13 @@ MAX_BUFFER = 50
 debounce_timer = None
 DEBOUNCE_SECONDS = 0.4
 
+bridge = None
+overlay = None
+
 def on_debounce_fire():
     """Called when the user pauses typing for DEBOUNCE_SECONDS."""
     global buffer
+    global current_slang, current_formal
     # Pull the last few words from the buffer to check
     words = buffer.split()
 
@@ -21,7 +34,9 @@ def on_debounce_fire():
         result = match(text_to_check)
         if result:
             slang, definition = result
-            print(f"Suggestion: {slang} ({definition[:30]}...)")
+            current_slang = slang
+            current_formal = text_to_check
+            bridge.suggestion_ready.emit(slang, definition)
             return
     
     # text_to_check = " ".join(buffer.split()[-5:])
@@ -34,8 +49,20 @@ def on_debounce_fire():
 
 def on_press(key):
     """Called on every keypress by pynput."""
-    print(f"Key pressed: {key}")  # Debug: see every keypress in the console
     global buffer, debounce_timer
+
+    if key==keyboard.Key.tab:
+        if current_slang and current_formal and overlay.isVisible():
+            import keyboard as kb
+            for i in range(len(current_formal)):
+                kb.press_and_release('backspace')
+            for char in current_slang:
+                if char == ' ':
+                    kb.press_and_release('space')
+                else:
+                    kb.write(char)
+        bridge.hide_overlay.emit()  # Hide the overlay immediately
+        return
     
     # Cancel the existing timer so it resets
     if debounce_timer:
@@ -44,13 +71,11 @@ def on_press(key):
     # Append the character to the buffer
     try:
         buffer+=key.char
-        print(f"Buffer updated: '{buffer}'")  # Debug: see the buffer grow
     except AttributeError:
         if (key == keyboard.Key.space):
             buffer += " "
         elif (key == keyboard.Key.backspace):
             buffer = buffer[:-1]
-            print(f"Buffer updated (backspace): '{buffer}'")  # Debug: see the buffer update on backspace 
         else:
             pass
     
@@ -63,5 +88,14 @@ def on_press(key):
 
 if __name__ == "__main__":
     print("TWK is running. Start typing...")
+    app = QApplication(sys.argv)
+    bridge = Bridge()
+    overlay = SuggestionOverlay()
+    tray = SystemTray(app)
+    bridge.suggestion_ready.connect(overlay.show_suggestion)
+    bridge.hide_overlay.connect(overlay.hide_suggestion)
+
     with keyboard.Listener(on_press=on_press) as listener:
-        listener.join()
+        app.exec()
+    # with keyboard.Listener(on_press=on_press) as listener:
+    #     listener.join()

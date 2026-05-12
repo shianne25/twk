@@ -48,6 +48,10 @@ def seed_data():
         ("original", "day 1", "Slang for someone who has been around since the beginning of a trend, movement, or community, often used to indicate loyalty or authenticity"),
         ("old", "unc" , "Slang term for something that is old or outdated, often used humorously to describe something that is no longer relevant or fashionable"),
         ("charisma", "rizz", "Slang term for charisma or charm, often used to describe someone who has a magnetic personality or is particularly attractive"),
+        ("good game", "gg", "Short form for 'good game', used to show sportsmanship at the end of a game or match"),
+        ("i'm so lazy", "i'm such a chud", "Slang term for being extremely lazy or unmotivated, often used humorously to describe a lack of energy or ambition"),
+        ("brother", "bro", "Slang term for 'brother', used to refer to a close friend or acquaintance in a casual and friendly manner"),
+        ("my friend", "my guy", "Slang term for 'my friend', used to refer to a close friend or acquaintance in a casual and friendly manner"),
     ]
     
     # INSERT OR IGNORE so re-running the script doesn't duplicate rows

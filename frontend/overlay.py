@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QApplication, QLabel, QWidget
+from PyQt6.QtWidgets import QApplication, QLabel, QStyle, QWidget, QSystemTrayIcon, QMenu
 from PyQt6.QtCore import Qt, QPoint
 import sys
+from PyQt6.QtGui import QIcon, QAction
 
 class SuggestionOverlay(QWidget):
     def __init__(self):
@@ -39,22 +40,46 @@ class SuggestionOverlay(QWidget):
             """
         )
 
-    def show_suggestion(self, slang, definition, x, y):
+    def show_suggestion(self, slang, definition):
         # Set the label text to show slang and a hint to press Tab
         # Then move the widget to (x, y) and show it
         self.label.setText(f"{slang} - (press Tab to enter)")
         self.label.adjustSize()
         self.adjustSize()
-        self.move(QPoint(x, y))
+        self.move(QPoint(500, 500))
         self.show()
 
     def hide_suggestion(self):
         self.hide()
 
+class SystemTray(QSystemTrayIcon):
+    def __init__(self, app):
+        super().__init__()
+        self.app = app
+        self.setup_tray()
+
+    def setup_tray(self):
+        # Set an icon — for now use a built-in Qt icon
+        # Hint: look up QStyle.StandardPixmap for built-in icons
+        # or just use QIcon() with a path to a .ico file if you have one
+        self.setIcon(QApplication.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon))
+        self.setToolTip("TWK - Slang Assistant")
+        self.setVisible(True)
+
+        # Create the right-click menu
+        menu = QMenu()
+        
+        # Add a "Quit" action that closes the app
+        # Hint: QAction takes a label string and a parent
+        quit_action = QAction("Quit", self)
+        quit_action.triggered.connect(self.app.quit)
+        
+        menu.addAction(quit_action)
+        self.setContextMenu(menu)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     overlay = SuggestionOverlay()
+    tray = SystemTray(app)
     # Test it at a fixed position first
-    overlay.show_suggestion("i'm dead", "Extremely tired", 500, 500)
     sys.exit(app.exec())
