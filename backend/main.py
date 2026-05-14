@@ -1,6 +1,6 @@
 from pynput import keyboard
 import threading
-from backend.matcher import match
+from backend.matcher import CACHE, match
 from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtWidgets import QApplication
 from frontend.overlay import SuggestionOverlay, SystemTray
@@ -21,6 +21,11 @@ DEBOUNCE_SECONDS = 0.4
 
 bridge = None
 overlay = None
+listener = None
+is_replacing = False
+
+current_slang = None
+current_formal = None
 
 def on_debounce_fire():
     """Called when the user pauses typing for DEBOUNCE_SECONDS."""
@@ -29,7 +34,7 @@ def on_debounce_fire():
     # Pull the last few words from the buffer to check
     words = buffer.split()
 
-    for n in range (5, 0, -1):
+    for n in range(1, 6):
         text_to_check = " ".join(words[-n:])
         result = match(text_to_check)
         if result:
@@ -39,21 +44,20 @@ def on_debounce_fire():
             bridge.suggestion_ready.emit(slang, definition)
             return
     
-    # text_to_check = " ".join(buffer.split()[-5:])
-    
-    # result = match(text_to_check)
-    # if result:
-    #     slang, definition = result
-    #     # For now, just print — the overlay comes in Phase 4
-    #     print(f"Suggestion: {slang} ({definition[:30]}...)")
 
 def on_press(key):
     """Called on every keypress by pynput."""
-    global buffer, debounce_timer
+    global buffer, debounce_timer, is_replacing
+    if is_replacing:
+        return False
 
     if key==keyboard.Key.tab:
         if current_slang and current_formal and overlay.isVisible():
+            is_replacing = True
             import keyboard as kb
+            import time
+            time.sleep(0.05)
+            kb.press_and_release('backspace')
             for i in range(len(current_formal)):
                 kb.press_and_release('backspace')
             for char in current_slang:
@@ -61,6 +65,8 @@ def on_press(key):
                     kb.press_and_release('space')
                 else:
                     kb.write(char)
+            buffer = ""
+            is_replacing = False
         bridge.hide_overlay.emit()  # Hide the overlay immediately
         return
     
@@ -95,7 +101,6 @@ if __name__ == "__main__":
     bridge.suggestion_ready.connect(overlay.show_suggestion)
     bridge.hide_overlay.connect(overlay.hide_suggestion)
 
-    with keyboard.Listener(on_press=on_press) as listener:
-        app.exec()
-    # with keyboard.Listener(on_press=on_press) as listener:
-    #     listener.join()
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
+    app.exec()
