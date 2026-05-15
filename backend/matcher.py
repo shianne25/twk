@@ -32,6 +32,7 @@ def match_from_ollama(text):
     try:
         response = ollama.chat(
             model="llama3.2",
+            options={"temperature": 0},
             messages=[
                 {
                     "role": "system",
@@ -57,10 +58,13 @@ def match_from_ollama(text):
         import json
         data = json.loads(response.message.content)
         if data["slang"]:
-            if data["slang"].lower().strip() == text.lower().strip():
+            slang_clean = data["slang"].lower().strip()
+            input_clean = text.lower().strip()
+            if slang_clean == input_clean or input_clean in slang_clean:
+                return None
+            if len(slang_clean) > len(input_clean) * 1.5:
                 return None
             return (data["slang"], data["definition"])
-        return None
     except Exception:
         # Ollama isn't running — fail silently
         return None

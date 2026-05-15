@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QApplication, QLabel, QStyle, QWidget, QSystemTrayIcon, QMenu
 from PyQt6.QtCore import Qt, QPoint
 import sys
-from PyQt6.QtGui import QIcon, QAction
+from PyQt6.QtGui import QCursor, QIcon, QAction
 
 class SuggestionOverlay(QWidget):
     def __init__(self):
@@ -46,7 +46,8 @@ class SuggestionOverlay(QWidget):
         self.label.setText(f"{slang} - (press Tab to enter)")
         self.label.adjustSize()
         self.adjustSize()
-        self.move(QPoint(500, 500))
+        cursor_pos = QCursor.pos()
+        self.move(QPoint(cursor_pos.x() + 10, cursor_pos.y() - 60))
         self.show()
 
     def hide_suggestion(self):

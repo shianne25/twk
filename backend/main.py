@@ -5,6 +5,8 @@ from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtWidgets import QApplication
 from frontend.overlay import SuggestionOverlay, SystemTray
 import sys
+from pynput.keyboard import Controller, Key
+kb_controller = Controller()
 
 # The bridge — safely connects listener thread to the UI thread
 class Bridge(QObject):
@@ -49,22 +51,20 @@ def on_press(key):
     """Called on every keypress by pynput."""
     global buffer, debounce_timer, is_replacing
     if is_replacing:
-        return False
+        return
 
     if key==keyboard.Key.tab:
         if current_slang and current_formal and overlay.isVisible():
             is_replacing = True
-            import keyboard as kb
             import time
             time.sleep(0.05)
-            kb.press_and_release('backspace')
-            for i in range(len(current_formal)):
-                kb.press_and_release('backspace')
-            for char in current_slang:
-                if char == ' ':
-                    kb.press_and_release('space')
-                else:
-                    kb.write(char)
+
+            for _ in range(len(current_formal) + 1):
+                kb_controller.press(Key.backspace)
+                kb_controller.release(Key.backspace)
+                time.sleep(0.01)  # small delay prevents dropped keystrokes
+            
+            kb_controller.type(current_slang)
             buffer = ""
             is_replacing = False
         bridge.hide_overlay.emit()  # Hide the overlay immediately
