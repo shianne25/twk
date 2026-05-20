@@ -5,6 +5,7 @@ from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtWidgets import QApplication
 from frontend.overlay import SuggestionOverlay, SystemTray
 import sys
+import win32gui, win32process, psutil
 from pynput.keyboard import Controller, Key
 kb_controller = Controller()
 
@@ -29,6 +30,16 @@ is_replacing = False
 current_slang = None
 current_formal = None
 
+browsers = ["chrome", "firefox", "msedge", "opera", "brave"]
+
+def get_active_app():
+    hwnd = win32gui.GetForegroundWindow()
+    _, pid = win32process.GetWindowThreadProcessId(hwnd)
+    try:
+        return psutil.Process(pid).name().lower()
+    except:
+        return ""
+
 def on_debounce_fire():
     """Called when the user pauses typing for DEBOUNCE_SECONDS."""
     global buffer
@@ -50,6 +61,8 @@ def on_debounce_fire():
 def on_press(key):
     """Called on every keypress by pynput."""
     global buffer, debounce_timer, is_replacing
+    app = get_active_app()
+    extra = 0 if any(b in app for b in browsers) else 1
     if is_replacing:
         return
 
@@ -57,12 +70,12 @@ def on_press(key):
         if current_slang and current_formal and overlay.isVisible():
             is_replacing = True
             import time
-            time.sleep(0.05)
+            time.sleep(0.10)
 
-            for _ in range(len(current_formal) + 1):
+            for _ in range(len(current_formal) + extra):
                 kb_controller.press(Key.backspace)
                 kb_controller.release(Key.backspace)
-                time.sleep(0.01)  # small delay prevents dropped keystrokes
+                time.sleep(0.03)  # small delay prevents dropped keystrokes
             
             kb_controller.type(current_slang)
             buffer = ""
