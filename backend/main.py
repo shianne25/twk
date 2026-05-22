@@ -62,7 +62,7 @@ def on_debounce_fire():
     # Pull the last few words from the buffer to check
     words = buffer.split()
 
-    for n in range(1, 6):
+    for n in range(5, 0, -1):
         text_to_check = " ".join(words[-n:])
         result = match(text_to_check)
         if result:

@@ -52,6 +52,7 @@ def seed_data():
         ("i'm so lazy", "i'm such a chud", "Slang term for being extremely lazy or unmotivated, often used humorously to describe a lack of energy or ambition"),
         ("brother", "bro", "Slang term for 'brother', used to refer to a close friend or acquaintance in a casual and friendly manner"),
         ("my friend", "my guy", "Slang term for 'my friend', used to refer to a close friend or acquaintance in a casual and friendly manner"),
+        ("those who know", "twk", "Acronym for 'those who know', often used to refer to a group of people who are in the know about a particular topic or trend"),
     ]
     
     # INSERT OR IGNORE so re-running the script doesn't duplicate rows

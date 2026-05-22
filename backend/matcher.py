@@ -5,6 +5,7 @@ import ollama
 # These are your most common/obvious mappings - no DB hit needed
 # Format: "formal phrase" -> ("slang term", "definition")
 CACHE = {
+    "those who know": ("twk", "Acronym for 'those who know', often used to refer to a group of people who are in the know about a particular topic or trend"),
     "charisma": ("rizz", "Slang term for charisma or charm, often used to describe someone who has a magnetic personality or is particularly attractive"),
     "old" : ("unc" , "Slang term for something that is old or outdated, often used humorously to describe something that is no longer relevant or fashionable"),
 
