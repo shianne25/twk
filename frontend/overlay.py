@@ -48,7 +48,7 @@ class SuggestionOverlay(QWidget):
             border: none;
         """)
 
-        self.hint_label = QLabel("tab ↵", self)
+        self.hint_label = QLabel("` ↵", self)
         self.hint_label.setStyleSheet("""
             color: #8E8E93;
             font-size: 13px;

@@ -1,3 +1,4 @@
+import pyperclip
 from pynput import keyboard
 import threading
 from backend.matcher import CACHE, match
@@ -40,6 +41,20 @@ def get_active_app():
     except:
         return ""
 
+def type_via_clipboard(text):
+    import time
+    old_clip = pyperclip.paste()
+    pyperclip.copy(text)
+    time.sleep(0.1)
+    
+    kb_controller.press(Key.ctrl)
+    kb_controller.press('v')
+    kb_controller.release('v')
+    kb_controller.release(Key.ctrl)
+    
+    time.sleep(0.1)
+    pyperclip.copy(old_clip)
+
 def on_debounce_fire():
     """Called when the user pauses typing for DEBOUNCE_SECONDS."""
     global buffer
@@ -62,22 +77,22 @@ def on_press(key):
     """Called on every keypress by pynput."""
     global buffer, debounce_timer, is_replacing
     app = get_active_app()
-    extra = 0 if any(b in app for b in browsers) else 1
+    extra = 1 if any(b in app for b in browsers) else 0
     if is_replacing:
         return
 
-    if key==keyboard.Key.tab:
+    if hasattr(key, 'char') and key.char == '\\':
         if current_slang and current_formal and overlay.isVisible():
             is_replacing = True
             import time
-            time.sleep(0.10)
+            time.sleep(0.2)
 
-            for _ in range(len(current_formal) + extra):
+            for _ in range(len(current_formal) + 1):
                 kb_controller.press(Key.backspace)
                 kb_controller.release(Key.backspace)
                 time.sleep(0.03)  # small delay prevents dropped keystrokes
             
-            kb_controller.type(current_slang)
+            type_via_clipboard(current_slang)
             buffer = ""
             is_replacing = False
         bridge.hide_overlay.emit()  # Hide the overlay immediately
